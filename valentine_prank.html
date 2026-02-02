@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Valentine Prank</title>
+  <style>
+    :root{
+      --bg:#111;
+      --card:#fff;
+      --accent:#ff3b6b;
+      --muted:#666;
+    }
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
+    body{
+      background: radial-gradient(circle at 20% 20%, #220018 0%, #0b0410 40%, #050205 100%);
+      display:flex;align-items:center;justify-content:center;
+      color:var(--card);
+      overflow:hidden;
+    }
+
+    .card{
+      width:90%;
+      max-width:520px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border:1px solid rgba(255,255,255,0.06);
+      padding:28px;
+      border-radius:14px;
+      text-align:center;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+      position:relative;
+    }
+
+    h1{font-size:1.4rem;margin:0 0 12px}
+    p.lead{color:var(--muted);margin:0 0 18px}
+
+    .question{
+      font-size:1.25rem;
+      margin:14px 0 22px;
+      color:#ffeef4;
+    }
+
+    .buttons{
+      display:flex;
+      gap:16px;
+      justify-content:center;
+      align-items:center;
+      height:90px;
+      position:relative;
+    }
+
+    button{
+      padding:12px 22px;
+      font-size:1rem;
+      border-radius:999px;
+      border:2px solid rgba(255,255,255,0.06);
+      cursor:pointer;
+      transition:transform .15s ease, box-shadow .12s ease, background .12s;
+      background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      color:var(--card);
+      min-width:110px;
+      user-select:none;
+      position:relative;
+    }
+    button:active{transform:scale(.98)}
+    .yes{
+      background:linear-gradient(180deg, #ff6d98, #ff3b6b);
+      box-shadow: 0 8px 30px rgba(255,59,107,0.18), inset 0 -3px 10px rgba(0,0,0,0.15);
+      border:0;
+    }
+    .no{
+      position:absolute;
+      left: calc(50% + 80px);
+      top: 12px;
+      transform:translateX(-50%);
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.04);
+      min-width:110px;
+    }
+
+    /* final screen */
+    .final{
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      gap:16px;
+      background:linear-gradient(180deg, rgba(0,0,0,0.38), rgba(0,0,0,0.6));
+      backdrop-filter: blur(4px);
+      z-index:60;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .35s ease;
+    }
+    .final.show{opacity:1;pointer-events:auto}
+    .final h2{
+      font-size:2.2rem;
+      margin:0;
+      color:#fff;
+      letter-spacing:0.6px;
+    }
+    .heart{
+      font-size:3.6rem;
+      color:var(--accent);
+      transform:scale(0);
+      transition:transform .45s cubic-bezier(.2,1.1,.3,1);
+    }
+    .final.show .heart{transform:scale(1)}
+    /* little confetti hearts */
+    .confetti{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      overflow:hidden;
+      z-index:50;
+    }
+    .confetti i{
+      position:absolute;
+      font-style:normal;
+      color:var(--accent);
+      opacity:0.9;
+      transform-origin:center;
+      animation:fall linear;
+      font-size:18px;
+    }
+    @keyframes fall{
+      0%{transform:translateY(-20vh) rotate(0deg); opacity:1}
+      100%{transform:translateY(120vh) rotate(720deg); opacity:0.05}
+    }
+
+    footer{margin-top:14px;font-size:.84rem;color:var(--muted)}
+    @media (max-width:420px){
+      .question{font-size:1rem}
+      .buttons{height:120px}
+      .no{left:auto;right:18%}
+    }
+  </style>
+</head>
+<body>
+  <div class="card" role="dialog" aria-labelledby="title">
+    <h1 id="title">A special question</h1>
+    <p class="lead">This is a playful prank — feel free to change the name at the top of the file.</p>
+
+    <div class="question" id="questionText">Hey <span id="targetName">someone</span> — will you be my valentine?</div>
+
+    <div class="buttons" id="buttonsArea" aria-hidden="false">
+      <button class="yes" id="yesBtn" aria-label="Yes, I will">Yes ❤️</button>
+      <button class="no" id="noBtn" aria-label="No, I won't">No 😅</button>
+    </div>
+
+    <footer>Tip: move your mouse over "No" and watch it dodge. Click "Yes" to reveal the surprise.</footer>
+  </div>
+
+  <div class="final" id="finalScreen" role="status" aria-live="polite" aria-hidden="true">
+    <div class="heart" id="bigHeart">❤️</div>
+    <h2 id="finalText">Good girl</h2>
+  </div>
+
+  <div class="confetti" id="confetti"></div>
+
+  <script>
+    // Change the name here:
+    const girlName = "Emily";
+
+    // If you'd rather prompt at runtime, uncomment:
+    // const girlName = prompt("Enter her name:", "Emily") || "friend";
+
+    const targetNameEl = document.getElementById('targetName');
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn = document.getElementById('noBtn');
+    const buttonsArea = document.getElementById('buttonsArea');
+    const finalScreen = document.getElementById('finalScreen');
+    const finalText = document.getElementById('finalText');
+    const confetti = document.getElementById('confetti');
+
+    targetNameEl.textContent = girlName;
+
+    // Make the No button dodge on hover/focus
+    const container = document.querySelector('.card');
+    let dodgeCount = 0;
+
+    function getRandomPosition(button) {
+      const parentRect = container.getBoundingClientRect();
+      const btnRect = button.getBoundingClientRect();
+      const padding = 12;
+
+      const maxX = Math.max(0, parentRect.width - btnRect.width - padding*2);
+      const maxY = Math.max(0, parentRect.height - btnRect.height - padding*2);
+
+      const x = Math.floor(Math.random() * maxX) + padding;
+      const y = Math.floor(Math.random() * maxY) + padding + 60; // push a bit lower so text isn't overlapped
+
+      return {x,y};
+    }
+
+    function moveNoButton() {
+      dodgeCount++;
+      const pos = getRandomPosition(noBtn);
+      // Animate with transform to keep it smooth
+      noBtn.style.transition = "transform 220ms cubic-bezier(.2,.9,.3,1)";
+      noBtn.style.transform = `translate(${pos.x - (noBtn.offsetLeft)}px, ${pos.y - (noBtn.offsetTop)}px)`;
+      // If they've tried many times, briefly swap labels for fun
+      if (dodgeCount > 6 && dodgeCount % 3 === 0) {
+        noBtn.textContent = "Maybe 😉";
+      }
+    }
+
+    // Reset transform when container resizes to keep button inside
+    function resetNoPosition() {
+      noBtn.style.transition = "";
+      noBtn.style.transform = "";
+    }
+    window.addEventListener('resize', resetNoPosition);
+
+    // Move on hover or focus (for keyboard)
+    noBtn.addEventListener('mouseenter', moveNoButton);
+    noBtn.addEventListener('focus', moveNoButton);
+    // Also move if clicked (just in case)
+    noBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      moveNoButton();
+    });
+
+    // Yes click -> show final message
+    yesBtn.addEventListener('click', () => {
+      finalText.textContent = "Good girl";
+      showFinal();
+    });
+
+    // Show final screen with confetti hearts
+    function showFinal() {
+      finalScreen.classList.add('show');
+      finalScreen.setAttribute('aria-hidden','false');
+      // generate some confetti hearts
+      confetti.innerHTML = '';
+      const count = 18;
+      for (let i=0;i<count;i++){
+        const el = document.createElement('i');
+        el.textContent = '💖';
+        el.style.left = (Math.random()*100) + '%';
+        el.style.fontSize = (12 + Math.random()*28) + 'px';
+        el.style.animationDuration = (4 + Math.random()*3) + 's';
+        el.style.animationDelay = (Math.random()*0.6) + 's';
+        el.style.top = (-10 - Math.random()*20) + 'vh';
+        confetti.appendChild(el);
+      }
+      // small pulse on heart
+      const heart = document.getElementById('bigHeart');
+      heart.style.transform = 'scale(1.15)';
+      setTimeout(()=>heart.style.transform='scale(1)', 350);
+    }
+
+    // Optional: if you want the No button to never be reachable by keyboard, disable tabIndex
+    noBtn.setAttribute('tabindex','0'); // keep focusable but it will dodge on focus
+
+    // Accessibility: if someone forces click via keyboard and manages to "accept" No,
+    // politely fallback to moving it again.
+    noBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        moveNoButton();
+      }
+    });
+  </script>
+</body>
+</html>
